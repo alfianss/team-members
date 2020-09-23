@@ -128,6 +128,46 @@ class Team_Members {
         echo $html;
     }
 
+    public function custom_team_members( $atts = array() ) {
+
+        // set up default parameters
+        extract(shortcode_atts(array(
+            'position'  => 1,
+            'email'     => 1,
+            'phone'     => 1,
+            'website'   => 1,
+            'images'    => 1
+        ), $atts));
+
+        $mypost = array( 'post_type' => 'team_members', );
+        $loop = new WP_Query( $mypost );
+
+        $html = "<div class='row col-md-12' style='width: 100%; '>";
+        while ( $loop->have_posts() ) : $loop->the_post();;
+            $html .= "<div class='col-md-3' style='float:left; padding: 0 5px;'>";
+            if($images == 1) {
+                $html .= "<img src='".esc_html( get_post_meta( get_the_ID(), 'tm_images', true ) )."'>";
+            }
+            if($position == 1) {
+                $html .= "<span>".esc_html( get_post_meta( get_the_ID(), 'tm_position', true ) )."</span><br>";
+            }
+            if($email == 1) {
+                $html .= "<span>".esc_html( get_post_meta( get_the_ID(), 'tm_email', true ) )."</span><br>";
+            }
+            if($phone) {
+                $html .= "<span>".esc_html( get_post_meta( get_the_ID(), 'tm_phone', true ) )."</span><br>";
+            }
+            if($website == 1) {
+                $html .= "<span>".esc_html( get_post_meta( get_the_ID(), 'tm_url', true ) )."</span><br>";
+            }
+            $html .= "</div>";
+        endwhile;
+        wp_reset_query();
+        $html .= "</div>";
+
+        echo $html;
+    }
+
     
 }
 
@@ -138,3 +178,4 @@ add_action( 'admin_init', array($team_members, 'team_members_admin') );
 add_action( 'save_post', array($team_members, 'add_team_members_fields'), 10, 2 );
 
 add_shortcode( 'team_members_sc', array($team_members,'tm_shortcode') );
+add_shortcode( 'sc_tm_custom', array($team_members,'custom_team_members') );
