@@ -66,6 +66,35 @@ class Team_Members {
             }
             if ( isset( $_POST['tm_images'] ) && $_POST['tm_images'] != '' ) {
                 update_post_meta( $team_members_id, 'tm_images', $_POST['tm_images'] );
+
+                if( ! isset( $_FILES ) || empty( $_FILES ) || ! isset( $_FILES['my_files'] ) )
+                return;
+
+                if ( ! function_exists( 'wp_handle_upload' ) ) {
+                    require_once( ABSPATH . 'wp-admin/includes/file.php' );
+                }
+
+                $files = $_FILES['tm_images'];
+                foreach ($files['name'] as $key => $value) {
+                    if ($files['name'][$key]) {
+                        $uploadedfile = array(
+                            'name'     => $files['name'][$key],
+                            'type'     => $files['type'][$key],
+                            'tmp_name' => $files['tmp_name'][$key],
+                            'error'    => $files['error'][$key],
+                            'size'     => $files['size'][$key]
+                        );
+                        $movefile = wp_handle_upload( $uploadedfile, $upload_overrides );
+
+                        if ( $movefile && !isset( $movefile['error'] ) ) {
+                            $ufiles = get_post_meta( $team_members_id, 'tm_images', true );
+                            if( empty( $ufiles ) ) $ufiles = array();
+                            $ufiles[] = $movefile;
+                            // update_post_meta( $post_id, 'my_files', $ufiles );
+
+                        }
+                    }
+                }
             }
         }
     }
@@ -131,13 +160,13 @@ class Team_Members {
     public function custom_team_members( $atts = array() ) {
 
         // set up default parameters
-        extract(shortcode_atts(array(
+        $arr_atts = shortcode_atts(array(
             'position'  => 1,
             'email'     => 1,
             'phone'     => 1,
             'website'   => 1,
             'images'    => 1
-        ), $atts));
+        ), $atts);
 
         $mypost = array( 'post_type' => 'team_members', );
         $loop = new WP_Query( $mypost );
@@ -145,19 +174,19 @@ class Team_Members {
         $html = "<div class='row col-md-12' style='width: 100%; '>";
         while ( $loop->have_posts() ) : $loop->the_post();;
             $html .= "<div class='col-md-3' style='float:left; padding: 0 5px;'>";
-            if($images == 1) {
+            if($arr_atts['images'] == 1) {
                 $html .= "<img src='".esc_html( get_post_meta( get_the_ID(), 'tm_images', true ) )."'>";
             }
-            if($position == 1) {
+            if($arr_atts['position'] == 1) {
                 $html .= "<span>".esc_html( get_post_meta( get_the_ID(), 'tm_position', true ) )."</span><br>";
             }
-            if($email == 1) {
+            if($arr_atts['email'] == 1) {
                 $html .= "<span>".esc_html( get_post_meta( get_the_ID(), 'tm_email', true ) )."</span><br>";
             }
-            if($phone) {
+            if($arr_atts['phone']) {
                 $html .= "<span>".esc_html( get_post_meta( get_the_ID(), 'tm_phone', true ) )."</span><br>";
             }
-            if($website == 1) {
+            if($arr_atts['website'] == 1) {
                 $html .= "<span>".esc_html( get_post_meta( get_the_ID(), 'tm_url', true ) )."</span><br>";
             }
             $html .= "</div>";
